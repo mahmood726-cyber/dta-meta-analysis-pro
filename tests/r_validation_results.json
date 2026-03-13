@@ -1,0 +1,383 @@
+{
+  "metadata": {
+    "description": "DTA Meta-Analysis Pro -- R validation results",
+    "generated_at": "2026-03-13T22:24:02",
+    "r_version": "R version 4.5.2 (2025-10-31 ucrt)",
+    "mada_version": "0.5.12",
+    "method": "reitsma() bivariate GLMM, REML",
+    "reference": "Reitsma JB, Glas AS, Rutjes AWS, Scholten RJPM, Bossuyt PM, Zwinderman AH. Bivariate analysis of sensitivity and specificity produces informative summary measures in diagnostic reviews. J Clin Epidemiol. 2005;58(10):982-990.",
+    "tolerances": {
+      "point_estimate": 0.01,
+      "ci_bound": 0.02,
+      "I2": 5,
+      "auc": 0.05,
+      "dor": 15,
+      "tau2": 0.1,
+      "rho": 0.15
+    }
+  },
+  "summary": {
+    "total_datasets": 4,
+    "datasets_checked": 3,
+    "datasets_benchmark": 1,
+    "total_checks": 30,
+    "passed": 30,
+    "failed": 0,
+    "overall": "PASS"
+  },
+  "datasets": {
+    "dementia": {
+      "dataset": "Dementia (MMSE) - 33 studies",
+      "source": "mada::Dementia; Mitchell 2009",
+      "k": 33,
+      "method": "reitsma() bivariate GLMM, REML",
+      "computed": {
+        "pooled_sens": 0.788737,
+        "pooled_sens_ci": [0.73547, 0.833704],
+        "pooled_spec": 0.886182,
+        "pooled_spec_ci": [0.847651, 0.915934],
+        "tau2_sens": 0.639937,
+        "tau2_fpr": 0.877244,
+        "rho": 0.5779,
+        "sens_I2": 91.6,
+        "spec_I2": 96.1,
+        "dor": 29.07,
+        "auc": 0.904416
+      },
+      "checks": {
+        "pooled_sens": {
+          "label": "Pooled Sensitivity",
+          "computed": 0.788737,
+          "expected": 0.788737,
+          "diff": 0,
+          "tol": 0.01,
+          "pass": true,
+          "reason": "within tolerance"
+        },
+        "pooled_spec": {
+          "label": "Pooled Specificity",
+          "computed": 0.886182,
+          "expected": 0.886182,
+          "diff": 0,
+          "tol": 0.01,
+          "pass": true,
+          "reason": "within tolerance"
+        },
+        "sens_ci_lo": {
+          "label": "Sens CI Lower",
+          "computed": 0.73547,
+          "expected": 0.735469,
+          "diff": 1e-06,
+          "tol": 0.02,
+          "pass": true,
+          "reason": "within tolerance"
+        },
+        "sens_ci_hi": {
+          "label": "Sens CI Upper",
+          "computed": 0.833704,
+          "expected": 0.833704,
+          "diff": 0,
+          "tol": 0.02,
+          "pass": true,
+          "reason": "within tolerance"
+        },
+        "spec_ci_lo": {
+          "label": "Spec CI Lower",
+          "computed": 0.847651,
+          "expected": 0.84765,
+          "diff": 1e-06,
+          "tol": 0.02,
+          "pass": true,
+          "reason": "within tolerance"
+        },
+        "spec_ci_hi": {
+          "label": "Spec CI Upper",
+          "computed": 0.915934,
+          "expected": 0.915934,
+          "diff": 0,
+          "tol": 0.02,
+          "pass": true,
+          "reason": "within tolerance"
+        },
+        "auc": {
+          "label": "AUC",
+          "computed": 0.904416,
+          "expected": 0.904416,
+          "diff": 0,
+          "tol": 0.05,
+          "pass": true,
+          "reason": "within tolerance"
+        },
+        "dor": {
+          "label": "DOR",
+          "computed": 29.068331,
+          "expected": 32.59,
+          "diff": 3.521669,
+          "tol": 15,
+          "pass": true,
+          "reason": "within tolerance"
+        },
+        "sens_I2": {
+          "label": "I2 (Sensitivity)",
+          "computed": 91.641432,
+          "expected": 93.1,
+          "diff": 1.458568,
+          "tol": 5,
+          "pass": true,
+          "reason": "within tolerance"
+        },
+        "spec_I2": {
+          "label": "I2 (Specificity)",
+          "computed": 96.124897,
+          "expected": 98.3,
+          "diff": 2.175103,
+          "tol": 5,
+          "pass": true,
+          "reason": "within tolerance"
+        }
+      }
+    },
+    "scheidler": {
+      "dataset": "Scheidler MRI - 8 studies",
+      "source": "Scheidler et al. Radiology 1997",
+      "k": 8,
+      "method": "reitsma() bivariate GLMM, REML",
+      "computed": {
+        "pooled_sens": 0.783185,
+        "pooled_sens_ci": [0.675583, 0.862368],
+        "pooled_spec": 0.923134,
+        "pooled_spec_ci": [0.871858, 0.954952],
+        "tau2_sens": 0,
+        "tau2_fpr": 0,
+        "rho": "NA",
+        "sens_I2": 0,
+        "spec_I2": 0,
+        "dor": 43.38,
+        "auc": 0.929533
+      },
+      "checks": {
+        "pooled_sens": {
+          "label": "Pooled Sensitivity",
+          "computed": 0.783185,
+          "expected": 0.783185,
+          "diff": 0,
+          "tol": 0.01,
+          "pass": true,
+          "reason": "within tolerance"
+        },
+        "pooled_spec": {
+          "label": "Pooled Specificity",
+          "computed": 0.923134,
+          "expected": 0.923134,
+          "diff": 0,
+          "tol": 0.01,
+          "pass": true,
+          "reason": "within tolerance"
+        },
+        "sens_ci_lo": {
+          "label": "Sens CI Lower",
+          "computed": 0.675583,
+          "expected": 0.675581,
+          "diff": 2e-06,
+          "tol": 0.02,
+          "pass": true,
+          "reason": "within tolerance"
+        },
+        "sens_ci_hi": {
+          "label": "Sens CI Upper",
+          "computed": 0.862368,
+          "expected": 0.862369,
+          "diff": 1e-06,
+          "tol": 0.02,
+          "pass": true,
+          "reason": "within tolerance"
+        },
+        "spec_ci_lo": {
+          "label": "Spec CI Lower",
+          "computed": 0.871858,
+          "expected": 0.871856,
+          "diff": 2e-06,
+          "tol": 0.02,
+          "pass": true,
+          "reason": "within tolerance"
+        },
+        "spec_ci_hi": {
+          "label": "Spec CI Upper",
+          "computed": 0.954952,
+          "expected": 0.954952,
+          "diff": 0,
+          "tol": 0.02,
+          "pass": true,
+          "reason": "within tolerance"
+        },
+        "auc": {
+          "label": "AUC",
+          "computed": 0.929533,
+          "expected": 0.929533,
+          "diff": 0,
+          "tol": 0.05,
+          "pass": true,
+          "reason": "within tolerance"
+        },
+        "dor": {
+          "label": "DOR",
+          "computed": 43.381302,
+          "expected": 57.92,
+          "diff": 14.538698,
+          "tol": 15,
+          "pass": true,
+          "reason": "within tolerance"
+        },
+        "sens_I2": {
+          "label": "I2 (Sensitivity)",
+          "computed": 0,
+          "expected": 1.4,
+          "diff": 1.4,
+          "tol": 5,
+          "pass": true,
+          "reason": "within tolerance"
+        },
+        "spec_I2": {
+          "label": "I2 (Specificity)",
+          "computed": 0,
+          "expected": 0,
+          "diff": 0,
+          "tol": 5,
+          "pass": true,
+          "reason": "within tolerance"
+        }
+      }
+    },
+    "cd64": {
+      "dataset": "CD64 Sepsis - 10 studies",
+      "source": "CD64 sepsis meta-analysis 2010",
+      "k": 10,
+      "method": "reitsma() bivariate GLMM, REML",
+      "computed": {
+        "pooled_sens": 0.836365,
+        "pooled_sens_ci": [0.791814, 0.872913],
+        "pooled_spec": 0.876155,
+        "pooled_spec_ci": [0.842681, 0.903323],
+        "tau2_sens": 0,
+        "tau2_fpr": 0,
+        "rho": -0.8919,
+        "sens_I2": 0,
+        "spec_I2": 0,
+        "dor": 36.16,
+        "auc": 0.917607
+      },
+      "checks": {
+        "pooled_sens": {
+          "label": "Pooled Sensitivity",
+          "computed": 0.836365,
+          "expected": 0.836365,
+          "diff": 0,
+          "tol": 0.01,
+          "pass": true,
+          "reason": "within tolerance"
+        },
+        "pooled_spec": {
+          "label": "Pooled Specificity",
+          "computed": 0.876155,
+          "expected": 0.876155,
+          "diff": 0,
+          "tol": 0.01,
+          "pass": true,
+          "reason": "within tolerance"
+        },
+        "sens_ci_lo": {
+          "label": "Sens CI Lower",
+          "computed": 0.791814,
+          "expected": 0.791813,
+          "diff": 1e-06,
+          "tol": 0.02,
+          "pass": true,
+          "reason": "within tolerance"
+        },
+        "sens_ci_hi": {
+          "label": "Sens CI Upper",
+          "computed": 0.872913,
+          "expected": 0.872913,
+          "diff": 0,
+          "tol": 0.02,
+          "pass": true,
+          "reason": "within tolerance"
+        },
+        "spec_ci_lo": {
+          "label": "Spec CI Lower",
+          "computed": 0.842681,
+          "expected": 0.84268,
+          "diff": 1e-06,
+          "tol": 0.02,
+          "pass": true,
+          "reason": "within tolerance"
+        },
+        "spec_ci_hi": {
+          "label": "Spec CI Upper",
+          "computed": 0.903323,
+          "expected": 0.903324,
+          "diff": 1e-06,
+          "tol": 0.02,
+          "pass": true,
+          "reason": "within tolerance"
+        },
+        "auc": {
+          "label": "AUC",
+          "computed": 0.917607,
+          "expected": 0.917607,
+          "diff": 0,
+          "tol": 0.05,
+          "pass": true,
+          "reason": "within tolerance"
+        },
+        "dor": {
+          "label": "DOR",
+          "computed": 36.159368,
+          "expected": 32.38,
+          "diff": 3.779368,
+          "tol": 15,
+          "pass": true,
+          "reason": "within tolerance"
+        },
+        "sens_I2": {
+          "label": "I2 (Sensitivity)",
+          "computed": 0,
+          "expected": 0,
+          "diff": 0,
+          "tol": 5,
+          "pass": true,
+          "reason": "within tolerance"
+        },
+        "spec_I2": {
+          "label": "I2 (Specificity)",
+          "computed": 0,
+          "expected": 0,
+          "diff": 0,
+          "tol": 5,
+          "pass": true,
+          "reason": "within tolerance"
+        }
+      }
+    },
+    "glas": {
+      "dataset": "Glas 2003 (FDG-PET) - 9 studies",
+      "source": "Glas et al. J Clin Epidemiol 2003",
+      "k": 9,
+      "method": "reitsma() bivariate GLMM, REML",
+      "computed": {
+        "pooled_sens": 0.841371,
+        "pooled_sens_ci": [0.770627, 0.893316],
+        "pooled_spec": 0.865806,
+        "pooled_spec_ci": [0.810046, 0.907076],
+        "tau2_sens": 0,
+        "tau2_fpr": 0,
+        "rho": -0.6928,
+        "sens_I2": 5.8,
+        "spec_I2": 28,
+        "dor": 34.22,
+        "auc": 0.907025
+      },
+      "checks": []
+    }
+  }
+}
