@@ -16093,7 +16093,7 @@ async function runWebRValidation() {
       progressText.textContent = 'Downloading R runtime (~20MB, cached after first load)...';
       progressBar.style.width = '10%';
 
-      const { WebR } = await import('https://webr.r-wasm.org/latest/webr.mjs');
+      const { WebR } = await import('https://webr.r-wasm.org/v0.4.4/webr.mjs');
       webRInstance = new WebR();
 
       progressText.textContent = 'Initializing R environment...';
@@ -16121,6 +16121,11 @@ async function runWebRValidation() {
       labels.push(s.study || s.author || 'Study');
     });
 
+    // Validate all values are finite integers before R injection
+    if (!tp.every(Number.isFinite) || !fp.every(Number.isFinite) || !fn.every(Number.isFinite) || !tn.every(Number.isFinite)) {
+      throw new Error('Invalid data: all TP/FP/FN/TN values must be finite numbers.');
+    }
+
     // Step 3: Run R bivariate model
     progressText.textContent = 'Running bivariate random-effects model in R...';
     progressBar.style.width = '70%';
@@ -16136,8 +16141,8 @@ async function runWebRValidation() {
 
       k <- length(TP)
 
-      # Continuity correction
-      cc <- 0.5
+      # Continuity correction (only for zero cells, matching JS engine)
+      cc <- ifelse(TP * FP * FN * TN == 0, 0.5, 0)
       y1 <- logit((TP + cc) / (TP + FN + 2*cc))
       y2 <- logit((TN + cc) / (FP + TN + 2*cc))
       v1 <- 1/(TP + cc) + 1/(FN + cc)
@@ -16165,8 +16170,8 @@ async function runWebRValidation() {
         -ll
       }
 
-      # Optimize
-      start <- c(mean(y1), mean(y2), log(sd(y1)/2), log(sd(y2)/2), 0)
+      # Optimize (protect against -Inf from sd=0 with k=2)
+      start <- c(mean(y1), mean(y2), log(max(0.1, sd(y1)/2)), log(max(0.1, sd(y2)/2)), 0)
       fit <- optim(start, nll_reml, method = "Nelder-Mead",
                    control = list(maxit = 50000, reltol = 1e-12))
 
@@ -16208,9 +16213,9 @@ async function runWebRValidation() {
       # DOR
       dor <- exp(mu1 + mu2)
 
-      # AUC approximation (SROC) - Moses-Littenberg via Phi
+      # AUC approximation: Phi(Lambda/sqrt(2)) per Harbord et al. 2007
       lambda <- (mu1 + mu2) / 2
-      auc_approx <- pnorm(lambda / sqrt(1 + (tau1^2 + tau2^2)/2))
+      auc_approx <- pnorm(lambda / sqrt(2))
 
       c(k, sens, spec,
         sens_ci_lo, sens_ci_hi, spec_ci_lo, spec_ci_hi,
@@ -16277,8 +16282,9 @@ async function runWebRValidation() {
     html += '</div></div>';
 
     // Comparison table
-    html += '<div class="table-wrap"><table>';
-    html += '<thead><tr><th>Metric</th><th>DTA Pro (JS)</th><th>WebR (Base R)</th><th>Abs. Difference</th><th>Status</th></tr></thead>';
+    html += '<div class="table-wrap"><table aria-label="WebR vs DTA Pro comparison">';
+    html += '<caption class="sr-only">Comparison of DTA Pro JavaScript engine and WebR base R bivariate model results</caption>';
+    html += '<thead><tr><th scope="col">Metric</th><th scope="col">DTA Pro (JS)</th><th scope="col">WebR (Base R)</th><th scope="col">Abs. Difference</th><th scope="col">Status</th></tr></thead>';
     html += '<tbody>';
 
     function addWebrRow(name, jsVal, rVal, tol) {
@@ -16311,9 +16317,9 @@ async function runWebRValidation() {
     html += '</tbody></table></div>';
 
     html += '<div class="alert alert-info" style="margin-top:1rem;font-size:0.8rem;">';
-    html += '<strong>Note:</strong> WebR uses base R <code>optim()</code> (Nelder-Mead + BFGS refinement) with REML-like bivariate likelihood. ';
-    html += 'Small differences from DTA Pro or R mada are expected due to optimization algorithm and convergence tolerance differences. ';
-    html += 'For gold-standard validation, see the R mada comparison above or use the exported R script.';
+    html += '<strong>Note:</strong> WebR uses base R <code>optim()</code> (Nelder-Mead + BFGS refinement) with ML bivariate likelihood. ';
+    html += 'Both DTA Pro (JS) and this WebR model use ML estimation. Small differences may arise from optimization algorithm and convergence tolerance. ';
+    html += 'For REML-based gold-standard validation against R mada, see the R mada comparison above or use the exported R script.';
     html += '</div>';
 
     html += '<div style="margin-top:0.75rem;font-size:0.75rem;color:var(--text-muted);">';
@@ -16323,9 +16329,26 @@ async function runWebRValidation() {
 
     resultsContainer.innerHTML = html;
 
-    badge.textContent = 'Validated';
-    badge.style.color = '#16a34a';
-    badge.style.background = 'rgba(72,187,120,0.15)';
+    // Set badge based on actual pass status
+    const hasChecks = jsResults !== null && jsSens !== null;
+    const allPass = hasChecks && [
+      [jsSens, rSens, 0.01], [jsSpec, rSpec, 0.01],
+      [jsDOR, rDOR, 1.0], [jsAUC, rAUC, 0.02]
+    ].every(([js, r, t]) => js === null || Math.abs(js - r) <= t);
+
+    if (!hasChecks) {
+      badge.textContent = 'R computed';
+      badge.style.color = 'var(--info)';
+      badge.style.background = 'rgba(99,179,237,0.15)';
+    } else if (allPass) {
+      badge.textContent = 'Validated';
+      badge.style.color = '#16a34a';
+      badge.style.background = 'rgba(72,187,120,0.15)';
+    } else {
+      badge.textContent = 'Partial match';
+      badge.style.color = 'var(--warning)';
+      badge.style.background = 'rgba(237,137,54,0.15)';
+    }
 
     setTimeout(() => {
       progress.style.display = 'none';
