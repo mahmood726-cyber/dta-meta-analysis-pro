@@ -7,7 +7,7 @@ against the R mada package (v0.5.12).
 
 | File | Description | Studies (k) | Source |
 |------|-------------|-------------|--------|
-| dementia_mmse.csv | MMSE screening for dementia | 33 | mada::AuditC / published reviews |
+| dementia_mmse.csv | MMSE screening for dementia | 33 | mada::Dementia / Mitchell 2009 |
 | scheidler_mri.csv | MRI for lymph node staging | 8 | Scheidler et al., mada package |
 | cd64_sepsis.csv | CD64 biomarker for sepsis | 10 | Published DTA reviews |
 | glas_fdgpet.csv | FDG-PET for colorectal recurrence | 9 | Glas et al. 2003, mada::Glas |
