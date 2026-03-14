@@ -8128,7 +8128,7 @@ function updateAdvancedUI(results) {
       ...plotLayout()
     });
   }
-  if (adv.prediction && adv.prediction.error == null) {
+  if (adv.prediction && adv.prediction.error == null && adv.prediction.sensitivity && adv.prediction.specificity) {
     document.getElementById('predictionResults').innerHTML =
       `<div class="table-wrap"><table>
         <thead><tr><th scope="col">Parameter</th><th scope="col">Point Estimate</th><th scope="col">95% CI</th><th scope="col">95% Prediction Interval</th><th scope="col">tau²</th></tr></thead>
