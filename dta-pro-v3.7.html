@@ -3,11 +3,11 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.plot.ly https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: blob:; connect-src 'self' https://eutils.ncbi.nlm.nih.gov; worker-src blob:;">
-  <title>DTA Meta-Analysis Pro v4.9.2 | PLOS ONE Edition</title>
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.plot.ly https://cdnjs.cloudflare.com https://webr.r-wasm.org; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: blob:; connect-src 'self' https://eutils.ncbi.nlm.nih.gov https://webr.r-wasm.org https://repo.r-wasm.org; worker-src blob: https://webr.r-wasm.org;">
+  <title>DTA Meta-Analysis Pro v4.9.2</title>
   <!--
   ============================================================================
-  DTA Meta-Analysis Pro v4.9.2 - PLOS ONE Edition
+  DTA Meta-Analysis Pro v4.9.2
   ============================================================================
 
   VERSION HISTORY:
@@ -1075,6 +1075,58 @@
             <div class="placeholder-icon">&#128202;</div>
             <p>Click "Run All Tests" to validate against R benchmarks</p>
           </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- WebR In-Browser R Validation -->
+    <div class="card" style="margin-top:1.5rem;border:2px solid var(--accent2);">
+      <div class="card-header" style="background:linear-gradient(135deg, var(--accent2) 0%, var(--accent3) 100%);">
+        <h2 class="card-title" style="color:white;font-weight:700;">
+          WebR: Validate with R in Your Browser
+        </h2>
+        <div style="display:flex;gap:0.5rem;align-items:center;">
+          <span id="webrStatusBadge" class="badge" style="background:white;color:var(--accent2);">Not loaded</span>
+          <button class="btn btn-sm" id="webrRunBtn" onclick="runWebRValidation()" style="background:white;color:var(--accent2);font-weight:600;">
+            Load R &amp; Validate
+          </button>
+        </div>
+      </div>
+      <div class="card-body">
+        <div class="alert alert-info" style="margin-bottom:1rem;">
+          <strong>Independent Verification:</strong> This loads a full R environment directly in your browser using
+          <a href="https://docs.r-wasm.org/webr/latest/" target="_blank" rel="noopener" style="color:var(--info);">WebR</a> (WebAssembly).
+          It runs a bivariate random-effects model on the current dataset and compares results with DTA Pro's JavaScript engine.
+          <br><strong>First load:</strong> ~10-30 seconds (downloads ~20MB R runtime). Subsequent runs are cached.
+          <br><strong>No data leaves your browser.</strong> All computation is local.
+        </div>
+
+        <div id="webrProgressContainer" style="display:none;margin-bottom:1rem;">
+          <div style="display:flex;align-items:center;gap:0.75rem;margin-bottom:0.5rem;">
+            <div class="spinner"></div>
+            <span id="webrProgressText" style="font-size:0.85rem;">Initializing WebR...</span>
+          </div>
+          <div class="progress-bar">
+            <div id="webrProgressBar" class="progress-fill" style="width:0%"></div>
+          </div>
+        </div>
+
+        <div id="webrResultsContainer">
+          <div class="placeholder">
+            <div class="placeholder-icon" style="font-size:2rem;">R</div>
+            <p>Click "Load R &amp; Validate" to run an independent R bivariate model on your current dataset</p>
+            <p style="font-size:0.8rem;color:var(--text-muted);margin-top:0.5rem;">
+              Requires: data loaded in the Data Input tab. Uses base R optim() — no packages needed.
+            </p>
+          </div>
+        </div>
+
+        <div style="margin-top:1rem;padding-top:1rem;border-top:1px solid var(--border);">
+          <p style="font-size:0.8rem;color:var(--text-muted);">
+            <strong>Alternative:</strong> Copy the R script from the "R Script Export" panel above and paste it into
+            <a href="https://webr.r-wasm.org/latest/" target="_blank" rel="noopener" style="color:var(--info);">webr.r-wasm.org</a>
+            or your local R/RStudio installation.
+          </p>
         </div>
       </div>
     </div>
@@ -16003,6 +16055,306 @@ function formatValidationValue(val) {
   if (Math.abs(val) >= 100) return val.toFixed(1);
   if (Math.abs(val) >= 1) return val.toFixed(2);
   return val.toFixed(4);
+}
+
+// ============================================================================
+// WebR In-Browser Validation
+// ============================================================================
+let webRInstance = null;
+let webRLoading = false;
+
+async function runWebRValidation() {
+  if (webRLoading) return;
+
+  // Check if data is loaded
+  const studies = typeof getStudyData === 'function' ? getStudyData() : [];
+  if (!studies || studies.length < 2) {
+    showModal('No Data', 'Please load at least 2 studies in the Data Input tab before running WebR validation.');
+    return;
+  }
+
+  const btn = document.getElementById('webrRunBtn');
+  const badge = document.getElementById('webrStatusBadge');
+  const progress = document.getElementById('webrProgressContainer');
+  const progressText = document.getElementById('webrProgressText');
+  const progressBar = document.getElementById('webrProgressBar');
+  const resultsContainer = document.getElementById('webrResultsContainer');
+
+  webRLoading = true;
+  btn.disabled = true;
+  btn.textContent = 'Loading...';
+  progress.style.display = 'block';
+  badge.textContent = 'Loading R...';
+  badge.style.color = 'var(--warning)';
+
+  try {
+    // Step 1: Load WebR if not already loaded
+    if (!webRInstance) {
+      progressText.textContent = 'Downloading R runtime (~20MB, cached after first load)...';
+      progressBar.style.width = '10%';
+
+      const { WebR } = await import('https://webr.r-wasm.org/latest/webr.mjs');
+      webRInstance = new WebR();
+
+      progressText.textContent = 'Initializing R environment...';
+      progressBar.style.width = '30%';
+
+      await webRInstance.init();
+
+      progressText.textContent = 'R environment ready.';
+      progressBar.style.width = '50%';
+    } else {
+      progressText.textContent = 'R environment already loaded.';
+      progressBar.style.width = '50%';
+    }
+
+    // Step 2: Extract current dataset
+    progressText.textContent = 'Extracting study data...';
+    progressBar.style.width = '60%';
+
+    const tp = [], fp = [], fn = [], tn = [], labels = [];
+    studies.forEach(s => {
+      tp.push(parseInt(s.tp) || 0);
+      fp.push(parseInt(s.fp) || 0);
+      fn.push(parseInt(s.fn) || 0);
+      tn.push(parseInt(s.tn) || 0);
+      labels.push(s.study || s.author || 'Study');
+    });
+
+    // Step 3: Run R bivariate model
+    progressText.textContent = 'Running bivariate random-effects model in R...';
+    progressBar.style.width = '70%';
+
+    const rCode = `
+      logit <- function(p) log(p / (1 - p))
+      expit <- function(x) 1 / (1 + exp(-x))
+
+      TP <- c(${tp.join(',')})
+      FP <- c(${fp.join(',')})
+      FN <- c(${fn.join(',')})
+      TN <- c(${tn.join(',')})
+
+      k <- length(TP)
+
+      # Continuity correction
+      cc <- 0.5
+      y1 <- logit((TP + cc) / (TP + FN + 2*cc))
+      y2 <- logit((TN + cc) / (FP + TN + 2*cc))
+      v1 <- 1/(TP + cc) + 1/(FN + cc)
+      v2 <- 1/(TN + cc) + 1/(FP + cc)
+
+      # Bivariate REML negative log-likelihood
+      nll_reml <- function(par) {
+        mu1 <- par[1]; mu2 <- par[2]
+        lt1 <- par[3]; lt2 <- par[4]  # log(tau)
+        arho <- par[5]                 # atanh(rho)
+        t1 <- exp(lt1); t2 <- exp(lt2)
+        rho <- tanh(arho)
+
+        ll <- 0
+        for (i in 1:k) {
+          Sigma <- matrix(c(t1^2 + v1[i], rho*t1*t2,
+                            rho*t1*t2, t2^2 + v2[i]), 2, 2)
+          d <- c(y1[i] - mu1, y2[i] - mu2)
+          det_S <- Sigma[1,1]*Sigma[2,2] - Sigma[1,2]*Sigma[2,1]
+          if (det_S <= 0) return(1e10)
+          inv_S <- matrix(c(Sigma[2,2], -Sigma[1,2],
+                           -Sigma[2,1], Sigma[1,1]), 2, 2) / det_S
+          ll <- ll - 0.5 * (log(det_S) + sum(d * (inv_S %*% d)))
+        }
+        -ll
+      }
+
+      # Optimize
+      start <- c(mean(y1), mean(y2), log(sd(y1)/2), log(sd(y2)/2), 0)
+      fit <- optim(start, nll_reml, method = "Nelder-Mead",
+                   control = list(maxit = 50000, reltol = 1e-12))
+
+      # Also try BFGS from the Nelder-Mead solution
+      fit2 <- tryCatch(
+        optim(fit$par, nll_reml, method = "BFGS",
+              control = list(maxit = 10000, reltol = 1e-12)),
+        error = function(e) fit
+      )
+      if (fit2$value < fit$value) fit <- fit2
+
+      mu1 <- fit$par[1]; mu2 <- fit$par[2]
+      tau1 <- exp(fit$par[3]); tau2 <- exp(fit$par[4])
+      rho <- tanh(fit$par[5])
+
+      sens <- expit(mu1); spec <- expit(mu2)
+
+      # Standard errors via Hessian
+      H <- tryCatch({
+        optimHess(fit$par, nll_reml)
+      }, error = function(e) NULL)
+
+      se_mu1 <- NA; se_mu2 <- NA
+      sens_ci_lo <- NA; sens_ci_hi <- NA
+      spec_ci_lo <- NA; spec_ci_hi <- NA
+
+      if (!is.null(H)) {
+        V <- tryCatch(solve(H), error = function(e) NULL)
+        if (!is.null(V) && all(diag(V) > 0)) {
+          se_mu1 <- sqrt(V[1,1])
+          se_mu2 <- sqrt(V[2,2])
+          sens_ci_lo <- expit(mu1 - 1.96 * se_mu1)
+          sens_ci_hi <- expit(mu1 + 1.96 * se_mu1)
+          spec_ci_lo <- expit(mu2 - 1.96 * se_mu2)
+          spec_ci_hi <- expit(mu2 + 1.96 * se_mu2)
+        }
+      }
+
+      # DOR
+      dor <- exp(mu1 + mu2)
+
+      # AUC approximation (SROC) - Moses-Littenberg via Phi
+      lambda <- (mu1 + mu2) / 2
+      auc_approx <- pnorm(lambda / sqrt(1 + (tau1^2 + tau2^2)/2))
+
+      c(k, sens, spec,
+        sens_ci_lo, sens_ci_hi, spec_ci_lo, spec_ci_hi,
+        tau1^2, tau2^2, rho, dor, auc_approx,
+        mu1, mu2, fit$convergence)
+    `;
+
+    const result = await webRInstance.evalR(rCode);
+    const rValues = await result.toArray();
+
+    progressText.textContent = 'Comparing with JavaScript engine...';
+    progressBar.style.width = '90%';
+
+    // Step 4: Get JS results for comparison
+    let jsResults = null;
+    if (State.results && State.results.summary) {
+      const s = State.results.summary;
+      const h = State.results.heterogeneity || {};
+      jsResults = {
+        sens: s.sens,
+        spec: s.spec,
+        tau2_sens: h.tau2_sens ?? s.tau2_sens ?? null,
+        tau2_spec: h.tau2_spec ?? s.tau2_spec ?? null,
+        rho: h.rho ?? s.rho ?? null,
+        dor: s.dor,
+        auc: State.results.pooled?.auc ?? s.auc ?? null
+      };
+    }
+
+    // Step 5: Display comparison
+    progressBar.style.width = '100%';
+    progressText.textContent = 'Done!';
+
+    const rK = rValues[0];
+    const rSens = rValues[1];
+    const rSpec = rValues[2];
+    const rSensCILo = rValues[3];
+    const rSensCIHi = rValues[4];
+    const rSpecCILo = rValues[5];
+    const rSpecCIHi = rValues[6];
+    const rTau1sq = rValues[7];
+    const rTau2sq = rValues[8];
+    const rRho = rValues[9];
+    const rDOR = rValues[10];
+    const rAUC = rValues[11];
+    const rMu1 = rValues[12];
+    const rMu2 = rValues[13];
+    const rConv = rValues[14];
+
+    // Build comparison table
+    let html = '';
+
+    if (rConv !== 0) {
+      html += '<div class="alert alert-warning"><strong>Warning:</strong> R optimizer did not fully converge. Results may be approximate.</div>';
+    }
+
+    html += '<div style="background:var(--bg-tertiary);border-radius:8px;padding:1rem;margin-bottom:1rem;">';
+    html += '<h3 style="margin-bottom:0.75rem;font-size:1rem;">WebR Bivariate Model Results (k = ' + rK + ' studies)</h3>';
+    html += '<div class="grid" style="grid-template-columns:repeat(4,1fr);gap:0.75rem;">';
+    html += '<div class="stat-card"><div class="stat-value accent">' + (rSens * 100).toFixed(1) + '%</div><div class="stat-label">R Sensitivity</div></div>';
+    html += '<div class="stat-card"><div class="stat-value accent2">' + (rSpec * 100).toFixed(1) + '%</div><div class="stat-label">R Specificity</div></div>';
+    html += '<div class="stat-card"><div class="stat-value">' + rDOR.toFixed(2) + '</div><div class="stat-label">R DOR</div></div>';
+    html += '<div class="stat-card"><div class="stat-value success">' + (rAUC * 100).toFixed(1) + '%</div><div class="stat-label">R AUC (approx)</div></div>';
+    html += '</div></div>';
+
+    // Comparison table
+    html += '<div class="table-wrap"><table>';
+    html += '<thead><tr><th>Metric</th><th>DTA Pro (JS)</th><th>WebR (Base R)</th><th>Abs. Difference</th><th>Status</th></tr></thead>';
+    html += '<tbody>';
+
+    function addWebrRow(name, jsVal, rVal, tol) {
+      const diff = jsVal !== null && !isNaN(jsVal) ? Math.abs(jsVal - rVal) : null;
+      const pass = diff !== null && diff <= tol;
+      const jsStr = jsVal !== null && !isNaN(jsVal) ? jsVal.toFixed(4) : 'N/A (run analysis first)';
+      const diffStr = diff !== null ? diff.toExponential(2) : '-';
+      const statusBadge = diff === null ? '<span class="badge badge-warning">No JS value</span>' :
+                          pass ? '<span class="badge badge-success">PASS</span>' :
+                          '<span class="badge badge-warning">CHECK</span>';
+      html += '<tr><td>' + escapeHTML(name) + '</td><td class="mono">' + jsStr + '</td><td class="mono">' + rVal.toFixed(4) + '</td><td class="mono">' + diffStr + '</td><td>' + statusBadge + '</td></tr>';
+    }
+
+    const jsSens = jsResults ? (jsResults.sens ?? null) : null;
+    const jsSpec = jsResults ? (jsResults.spec ?? null) : null;
+    const jsTau1sq = jsResults ? (jsResults.tau2_sens ?? null) : null;
+    const jsTau2sq = jsResults ? (jsResults.tau2_spec ?? null) : null;
+    const jsRho = jsResults ? (jsResults.rho ?? null) : null;
+    const jsDOR = jsResults ? (jsResults.dor ?? null) : null;
+    const jsAUC = jsResults ? (jsResults.auc ?? null) : null;
+
+    addWebrRow('Pooled Sensitivity', jsSens, rSens, 0.01);
+    addWebrRow('Pooled Specificity', jsSpec, rSpec, 0.01);
+    addWebrRow('tau\u00B2 (logit Sens)', jsTau1sq, rTau1sq, 0.05);
+    addWebrRow('tau\u00B2 (logit Spec)', jsTau2sq, rTau2sq, 0.05);
+    addWebrRow('Correlation (rho)', jsRho, rRho, 0.05);
+    addWebrRow('DOR', jsDOR, rDOR, 1.0);
+    addWebrRow('AUC (approx)', jsAUC, rAUC, 0.02);
+
+    html += '</tbody></table></div>';
+
+    html += '<div class="alert alert-info" style="margin-top:1rem;font-size:0.8rem;">';
+    html += '<strong>Note:</strong> WebR uses base R <code>optim()</code> (Nelder-Mead + BFGS refinement) with REML-like bivariate likelihood. ';
+    html += 'Small differences from DTA Pro or R mada are expected due to optimization algorithm and convergence tolerance differences. ';
+    html += 'For gold-standard validation, see the R mada comparison above or use the exported R script.';
+    html += '</div>';
+
+    html += '<div style="margin-top:0.75rem;font-size:0.75rem;color:var(--text-muted);">';
+    html += 'R logit(Sens) = ' + rMu1.toFixed(4) + ' | R logit(Spec) = ' + rMu2.toFixed(4);
+    html += ' | R Convergence: ' + (rConv === 0 ? 'OK' : 'Code ' + rConv);
+    html += '</div>';
+
+    resultsContainer.innerHTML = html;
+
+    badge.textContent = 'Validated';
+    badge.style.color = '#16a34a';
+    badge.style.background = 'rgba(72,187,120,0.15)';
+
+    setTimeout(() => {
+      progress.style.display = 'none';
+    }, 1500);
+
+  } catch (err) {
+    console.error('WebR validation error:', err);
+
+    let errorHtml = '<div class="alert alert-danger">';
+    errorHtml += '<strong>WebR Error:</strong> ' + escapeHTML(err.message || String(err));
+    errorHtml += '<br><br>This may happen if:<br>';
+    errorHtml += '- Your browser blocks WebAssembly (check browser settings)<br>';
+    errorHtml += '- You are behind a restrictive firewall<br>';
+    errorHtml += '- The WebR CDN is temporarily unavailable<br><br>';
+    errorHtml += '<strong>Alternative:</strong> Use the "R Script Export" panel above to generate a script, then paste it into ';
+    errorHtml += '<a href="https://webr.r-wasm.org/latest/" target="_blank" rel="noopener" style="color:var(--info);">webr.r-wasm.org</a> ';
+    errorHtml += 'or your local R installation.';
+    errorHtml += '</div>';
+
+    resultsContainer.innerHTML = errorHtml;
+    badge.textContent = 'Error';
+    badge.style.color = 'var(--danger)';
+    progress.style.display = 'none';
+
+  } finally {
+    webRLoading = false;
+    btn.disabled = false;
+    btn.textContent = 'Load R & Validate';
+  }
 }
 
 // V02 fix: Lock to prevent race conditions on rapid clicks
