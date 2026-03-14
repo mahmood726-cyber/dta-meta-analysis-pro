@@ -95,4 +95,4 @@ MIT License. See [LICENSE](LICENSE).
 
 If you use this tool in your research, please cite:
 
-> Ahmad M, Kumar N, Dar B, Khan L, Woo A. DTA Meta-Analysis Pro v4.9.2: a browser-based tool for diagnostic test accuracy meta-analysis. *PLOS ONE*. 2026. [DOI pending]
+> Ahmad M, Kumar N, Dar B, Khan L, Woo A. DTA Meta-Analysis Pro v4.9.2: a browser-based tool for diagnostic test accuracy meta-analysis. *F1000Research*. 2026. [DOI pending]
