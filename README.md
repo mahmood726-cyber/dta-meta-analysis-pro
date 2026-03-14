@@ -4,7 +4,7 @@
 
 ## Quick start
 
-1. Download `dta-pro-v3.7.html`
+1. Download `dta-pro.html`
 2. Open in Chrome, Firefox, Safari, or Edge
 3. Click **Datasets** > **Demo Data** to load sample data
 4. Click **Run Analysis**
@@ -48,7 +48,7 @@ Validated against R `mada` package v0.5.12 (bivariate GLMM via `reitsma()`).
 
 ```
 dta-meta-analysis-pro/
-+-- dta-pro-v3.7.html              # Main application
++-- dta-pro.html              # Main application
 +-- README.md                       # This file
 +-- LICENSE                         # MIT License
 +-- tests/

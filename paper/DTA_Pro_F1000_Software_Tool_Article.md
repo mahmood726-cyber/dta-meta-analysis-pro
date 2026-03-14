@@ -159,7 +159,7 @@ DTA Pro complements rather than replaces established R packages. For routine DTA
 
 - **Source code:** https://github.com/mahmood726-cyber/dta-meta-analysis-pro
 - **Archived source code at time of publication:** [ZENODO_DOI_PLACEHOLDER]
-- **Live demo:** https://mahmood726-cyber.github.io/dta-meta-analysis-pro/dta-pro-v3.7.html
+- **Live demo:** https://mahmood726-cyber.github.io/dta-meta-analysis-pro/dta-pro.html
 - **License:** MIT (https://opensource.org/licenses/MIT)
 
 ## Data availability
