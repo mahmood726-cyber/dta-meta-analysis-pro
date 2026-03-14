@@ -276,7 +276,7 @@
               <option value="none">None (exclude study)</option>
             </select>
             <div id="zeroCellHelp" style="font-size:0.7rem;color:var(--text-muted);margin-top:0.4rem;">
-              Default 0.5 correction per Cochrane Handbook for Systematic Reviews of DTA (Defined et al. 2023, Ch. 10.4.3)
+              Default 0.5 correction per Cochrane Handbook for Systematic Reviews of DTA (Macaskill et al. 2023, Ch. 10.4.3)
             </div>
           </div>
           <div class="form-group">
@@ -2426,7 +2426,7 @@ Study2,5,75,25,15,85"></textarea>
           <div class="card-body">
             <p style="font-size:0.85rem;color:var(--text-secondary);margin-bottom:1rem;">
               Assess certainty of evidence using the GRADE approach adapted for diagnostic test accuracy.
-              Based on Defined et al. 2017 framework.
+              Based on Schunemann et al. 2020 framework.
             </p>
             <button class="btn btn-primary" onclick="assessGRADEDTA()">Assess Certainty</button>
             <div id="gradeResults" style="margin-top:1rem;"></div>
@@ -16425,7 +16425,7 @@ function loadRValidatedDataset(datasetKey) {
 /**
  * Comparative DTA Analysis
  * Compares two diagnostic tests head-to-head
- * Based on methods from Defined et al. 2012
+ * Based on methods from Trikalinos et al. 2012
  */
 function runComparativeDTA(test1Studies, test2Studies) {
   if (test1Studies.length !== test2Studies.length) {
@@ -18162,7 +18162,7 @@ function assessGRADEDTA() {
   let html = `
     <h4>GRADE-DTA Certainty Assessment</h4>
     <p style="font-size:0.85rem;color:var(--text-secondary);margin-bottom:1rem;">
-      Based on Defined GRADE approach for diagnostic test accuracy (Defined et al. 2017)
+      Based on Defined GRADE approach for diagnostic test accuracy (Schunemann et al. 2020)
     </p>
     <div style="text-align:center;padding:1rem;background:${certaintyColors[certainty]}22;border:2px solid ${certaintyColors[certainty]};border-radius:8px;margin-bottom:1rem;">
       <div style="font-size:0.8rem;text-transform:uppercase;color:var(--text-secondary);">Overall Certainty of Evidence</div>
