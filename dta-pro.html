@@ -16126,6 +16126,9 @@ async function runWebRValidation() {
       throw new Error('Invalid data: all TP/FP/FN/TN values must be finite numbers.');
     }
 
+    // Get confLevel from UI for CI computation
+    const webrConfLevel = parseFloat(document.getElementById('confLevel')?.value) || 0.95;
+
     // Step 3: Try mada::reitsma first (gold standard REML), fall back to base R optim (ML)
     let usedMada = false;
     let rValues = null;
@@ -16176,11 +16179,12 @@ async function runWebRValidation() {
         # DOR = exp(mu1 - mu2) because mu2=logit(FPR), so logit(spec) = -mu2
         dor <- exp(mu1 - mu2)
 
-        # CIs on probability scale
-        sens_ci_lo <- expit(mu1 - 1.96 * se_mu1)
-        sens_ci_hi <- expit(mu1 + 1.96 * se_mu1)
-        spec_ci_lo <- 1 - expit(mu2 + 1.96 * se_mu2)
-        spec_ci_hi <- 1 - expit(mu2 - 1.96 * se_mu2)
+        # CIs on probability scale (confLevel-aware)
+        z_crit <- qnorm(1 - (1 - ${webrConfLevel}) / 2)
+        sens_ci_lo <- expit(mu1 - z_crit * se_mu1)
+        sens_ci_hi <- expit(mu1 + z_crit * se_mu1)
+        spec_ci_lo <- 1 - expit(mu2 + z_crit * se_mu2)
+        spec_ci_hi <- 1 - expit(mu2 - z_crit * se_mu2)
 
         c(k, sens, spec,
           sens_ci_lo, sens_ci_hi, spec_ci_lo, spec_ci_hi,
@@ -16243,7 +16247,7 @@ async function runWebRValidation() {
         rho <- tanh(fit$par[5])
         sens <- expit(mu1); spec <- expit(mu2)
         dor <- exp(mu1 + mu2)
-        lambda <- (mu1 + mu2) / 2
+        lambda <- mu1 + mu2
         auc_approx <- pnorm(lambda / sqrt(2))
 
         c(k, sens, spec, NA, NA, NA, NA,
